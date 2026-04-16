@@ -1,145 +1,461 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<div class="mb-4">
-  <h1 class="display-6">Campus Operations Dashboard</h1>
-  <p class="lead text-muted">Interactive local website showing energy, WiFi, mess, attendance, and recommendation intelligence.</p>
-</div>
-
-<div class="row row-cols-1 row-cols-md-3 g-3 mb-4">
-  <div class="col"><div class="card h-100 shadow-sm"><div class="card-body"><h6 class="card-title">Total Electricity</h6><p class="card-text display-6">{{ metrics.total_energy | default(0) }}</p><p class="text-muted mb-0">kWh consumed</p></div></div></div>
-  <div class="col"><div class="card h-100 shadow-sm"><div class="card-body"><h6 class="card-title">Avg WiFi Users</h6><p class="card-text display-6">{{ metrics.avg_wifi_users | default(0) }}</p><p class="text-muted mb-0">Average concurrent users</p></div></div></div>
-  <div class="col"><div class="card h-100 shadow-sm"><div class="card-body"><h6 class="card-title">Attendance Records</h6><p class="card-text display-6">{{ metrics.total_attendance }}</p><p class="text-muted mb-0">Rows processed</p></div></div></div>
-  <div class="col"><div class="card h-100 shadow-sm"><div class="card-body"><h6 class="card-title">Attendance Rate</h6><p class="card-text display-6">{{ metrics.present_rate | default('N/A') }}<span class="fs-4">%</span></p><p class="text-muted mb-0">Average present percentage</p></div></div></div>
-  <div class="col"><div class="card h-100 shadow-sm"><div class="card-body"><h6 class="card-title">Anomaly Count</h6><p class="card-text display-6">{{ metrics.anomaly_count }}</p><p class="text-muted mb-0">Suspicious electricity readings</p></div></div></div>
-  <div class="col"><div class="card h-100 shadow-sm"><div class="card-body"><h6 class="card-title">Recommendations</h6><p class="card-text display-6">{{ metrics.recommendation_count }}</p><p class="text-muted mb-0">Actionable insights generated</p></div></div></div>
-</div>
-
-<div class="row g-4 mb-4">
-  <div class="col-lg-8">
-    <div class="card shadow-sm"><div class="card-body"><h5 class="card-title">Daily Electricity Consumption</h5><div id="chart-electricity" style="min-height: 360px;"></div></div></div>
+<!-- Hero Section -->
+<section class="hero-section mb-5">
+  <div class="text-center mb-5">
+    <h1 class="display-6 text-gradient mb-3">
+      <i class="fas fa-chart-line me-3"></i>
+      Smart Campus Intelligence Dashboard
+    </h1>
+    <p class="lead text-muted mb-4">
+      Real-time analytics and insights for campus operations, energy management, and student experience optimization
+    </p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+      <div class="status-indicator status-normal">
+        <i class="fas fa-circle"></i>
+        System Online
+      </div>
+      <div class="status-indicator">
+        <i class="fas fa-clock"></i>
+        Last Updated: {{ metrics.last_updated | default('Just now') }}
+      </div>
+    </div>
   </div>
-  <div class="col-lg-4">
-    <div class="card shadow-sm mb-4"><div class="card-body"><h5 class="card-title">WiFi Load by Location</h5><div id="chart-wifi-location" style="min-height: 240px;"></div></div></div>
-    <div class="card shadow-sm"><div class="card-body"><h5 class="card-title">Recommendation Categories</h5><div id="chart-recommendations" style="min-height: 240px;"></div></div></div>
+</section>
+
+<!-- KPI Metrics Section -->
+<section class="kpi-section mb-5" id="analytics">
+  <div class="row g-4">
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-bolt me-2"></i>
+          Total Electricity
+        </div>
+        <span class="kpi-value">{{ metrics.total_energy | default(0) | round(1) }}</span>
+        <div class="kpi-description">kWh consumed this period</div>
+      </div>
+    </div>
+
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-wifi me-2"></i>
+          WiFi Usage
+        </div>
+        <span class="kpi-value">{{ metrics.avg_wifi_users | default(0) | round(0) }}</span>
+        <div class="kpi-description">Average concurrent users</div>
+      </div>
+    </div>
+
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-users me-2"></i>
+          Attendance Rate
+        </div>
+        <span class="kpi-value">{{ metrics.present_rate | default('N/A') }}<small>%</small></span>
+        <div class="kpi-description">Average present percentage</div>
+      </div>
+    </div>
+
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-utensils me-2"></i>
+          Mess Records
+        </div>
+        <span class="kpi-value">{{ metrics.total_attendance | default(0) }}</span>
+        <div class="kpi-description">Meal entries processed</div>
+      </div>
+    </div>
+
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          Anomalies
+        </div>
+        <span class="kpi-value">{{ metrics.anomaly_count | default(0) }}</span>
+        <div class="kpi-description">Suspicious readings detected</div>
+      </div>
+    </div>
+
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-lightbulb me-2"></i>
+          Insights
+        </div>
+        <span class="kpi-value">{{ metrics.recommendation_count | default(0) }}</span>
+        <div class="kpi-description">Actionable recommendations</div>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
-<div class="row g-4 mb-4">
-  <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body"><h5 class="card-title">Mess Crowd by Meal Type</h5><div id="chart-mess-meal" style="min-height: 300px;"></div></div></div></div>
-  <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body"><h5 class="card-title">Attendance Rate by Day</h5><div id="chart-attendance-day" style="min-height: 300px;"></div></div></div></div>
-</div>
+<!-- Main Analytics Section -->
+<section class="analytics-section mb-5">
+  <div class="row g-4 mb-4">
+    <!-- Primary Chart - Electricity Consumption -->
+    <div class="col-lg-8">
+      <div class="card shadow-soft">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-chart-area me-2"></i>
+            Electricity Consumption Trends
+          </h5>
+        </div>
+        <div class="card-body chart-container">
+          <div id="chart-electricity" style="min-height: 400px;"></div>
+        </div>
+      </div>
+    </div>
 
-<div class="row g-4 mb-4">
-  <div class="col-lg-12"><div class="card shadow-sm"><div class="card-body"><h5 class="card-title">Peak Hour Comparison</h5><div id="chart-peak-hours" style="min-height: 360px;"></div></div></div></div>
-</div>
+    <!-- Secondary Charts -->
+    <div class="col-lg-4">
+      <div class="card shadow-soft mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-wifi me-2"></i>
+            WiFi Load by Location
+          </h5>
+        </div>
+        <div class="card-body chart-container">
+          <div id="chart-wifi-location" style="min-height: 280px;"></div>
+        </div>
+      </div>
 
-<div class="card shadow-sm mb-4"><div class="card-body"><h5 class="card-title">Top Recommendation Actions</h5>
-  <div class="table-responsive">
-    <table class="table table-hover table-sm align-middle">
-      <thead class="table-light"><tr><th>#</th><th>Category</th><th>Priority</th><th>Recommendation</th><th>Estimated Saving</th></tr></thead>
-      <tbody>
-        {% for row in tables.recommendations %}
-        <tr>
-          <td>{{ loop.index }}</td>
-          <td>{{ row.category }}</td>
-          <td>{{ row.priority }}</td>
-          <td class="text-wrap">{{ row.recommendation }}</td>
-          <td>{{ row.estimated_saving | default('N/A') }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+      <div class="card shadow-soft">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-tags me-2"></i>
+            Recommendation Categories
+          </h5>
+        </div>
+        <div class="card-body chart-container">
+          <div id="chart-recommendations" style="min-height: 280px;"></div>
+        </div>
+      </div>
+    </div>
   </div>
-</div></div>
 
-<div class="alert alert-secondary mt-4" role="alert">
-  Data source: <strong>outputs/dashboard/</strong>. Refresh this page after re-running the pipeline.
-</div>
+  <!-- Operational Insights -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-6">
+      <div class="card shadow-soft">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-utensils me-2"></i>
+            Mess Crowd Patterns
+          </h5>
+        </div>
+        <div class="card-body chart-container">
+          <div id="chart-mess-meal" style="min-height: 320px;"></div>
+        </div>
+      </div>
+    </div>
 
+    <div class="col-lg-6">
+      <div class="card shadow-soft">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-calendar-check me-2"></i>
+            Attendance Rate by Day
+          </h5>
+        </div>
+        <div class="card-body chart-container">
+          <div id="chart-attendance-day" style="min-height: 320px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Peak Hours Analysis -->
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="card shadow-soft">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-clock me-2"></i>
+            Peak Hours Comparison
+          </h5>
+          <small class="text-muted">Electricity vs WiFi usage patterns throughout the day</small>
+        </div>
+        <div class="card-body chart-container">
+          <div id="chart-peak-hours" style="min-height: 400px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Recommendations Section -->
+<section class="recommendations-section mb-5" id="insights">
+  <div class="card shadow-soft">
+    <div class="card-header">
+      <h5 class="card-title mb-0">
+        <i class="fas fa-lightbulb me-2"></i>
+        AI-Generated Recommendations
+      </h5>
+      <small class="text-muted">Actionable insights to optimize campus operations and resource utilization</small>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">
+                <i class="fas fa-tag me-2"></i>
+                Category
+              </th>
+              <th scope="col">
+                <i class="fas fa-flag me-2"></i>
+                Priority
+              </th>
+              <th scope="col">
+                <i class="fas fa-comment me-2"></i>
+                Recommendation
+              </th>
+              <th scope="col">
+                <i class="fas fa-dollar-sign me-2"></i>
+                Potential Impact
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in tables.recommendations %}
+            <tr>
+              <td>
+                <span class="badge bg-primary rounded-pill">{{ loop.index }}</span>
+              </td>
+              <td>
+                <span class="badge bg-secondary">{{ row.category }}</span>
+              </td>
+              <td>
+                {% if row.priority == 'High' %}
+                  <span class="priority-badge priority-high">
+                    <i class="fas fa-arrow-up me-1"></i>High
+                  </span>
+                {% elif row.priority == 'Medium' %}
+                  <span class="priority-badge priority-medium">
+                    <i class="fas fa-minus me-1"></i>Medium
+                  </span>
+                {% else %}
+                  <span class="priority-badge priority-low">
+                    <i class="fas fa-arrow-down me-1"></i>Low
+                  </span>
+                {% endif %}
+              </td>
+              <td class="text-wrap">{{ row.recommendation }}</td>
+              <td>
+                <strong class="text-success">{{ row.estimated_saving | default('N/A') }}</strong>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Data Source Info -->
+<section class="data-info-section">
+  <div class="alert alert-info border-0 shadow-soft" role="alert">
+    <div class="d-flex align-items-center">
+      <i class="fas fa-info-circle me-3 fs-4 text-primary"></i>
+      <div>
+        <h6 class="alert-heading mb-1">Data Source Information</h6>
+        <p class="mb-0">
+          Dashboard data is sourced from <code>outputs/dashboard/</code> directory.
+          Refresh this page after re-running the data pipeline to see updated insights.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Chart Scripts -->
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Electricity Consumption Chart
   const electricityData = {{ charts.electricity | safe }};
+  const electricityLayout = {
+    margin: { t: 20, r: 20, l: 50, b: 50 },
+    xaxis: {
+      title: 'Date',
+      tickangle: -45,
+      gridcolor: '#f1f5f9'
+    },
+    yaxis: {
+      title: 'Total Units (kWh)',
+      gridcolor: '#f1f5f9'
+    },
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: 'Inter, sans-serif' }
+  };
+
   Plotly.newPlot('chart-electricity', [{
-      x: electricityData.x,
-      y: electricityData.y,
-      type: 'scatter',
-      mode: 'lines+markers',
-      marker: { color: '#e67e22' },
-      line: { shape: 'spline', smoothing: 1.2 }
-  }], {
-      margin: { t: 40, r: 20, l: 40, b: 40 },
-      xaxis: { title: 'Date', tickangle: -45 },
-      yaxis: { title: 'Total units' }
-  }, {responsive: true});
+    x: electricityData.x,
+    y: electricityData.y,
+    type: 'scatter',
+    mode: 'lines+markers',
+    marker: { color: '#f59e0b', size: 6 },
+    line: { color: '#f59e0b', width: 3, shape: 'spline', smoothing: 1.2 },
+    fill: 'tozeroy',
+    fillcolor: 'rgba(245, 158, 11, 0.1)'
+  }], electricityLayout, { responsive: true });
 
+  // WiFi Location Chart
   const wifiLocationData = {{ charts.wifi_location | safe }};
+  const wifiLayout = {
+    margin: { t: 20, r: 20, l: 120, b: 50 },
+    xaxis: {
+      title: 'Total Users',
+      gridcolor: '#f1f5f9'
+    },
+    yaxis: {
+      automargin: true,
+      gridcolor: '#f1f5f9'
+    },
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: 'Inter, sans-serif' }
+  };
+
   Plotly.newPlot('chart-wifi-location', [{
-      x: wifiLocationData.values,
-      y: wifiLocationData.labels,
-      type: 'bar',
-      orientation: 'h',
-      marker: { color: '#3498db' }
-  }], {
-      margin: { t: 40, r: 20, l: 120, b: 40 },
-      xaxis: { title: 'Total users' },
-      yaxis: { automargin: true }
-  }, {responsive: true});
+    x: wifiLocationData.values,
+    y: wifiLocationData.labels,
+    type: 'bar',
+    orientation: 'h',
+    marker: {
+      color: '#3b82f6',
+      line: { color: '#1e40af', width: 1 }
+    }
+  }], wifiLayout, { responsive: true });
 
+  // Mess Meal Chart
   const messMealData = {{ charts.mess_meal | safe }};
+  const messLayout = {
+    margin: { t: 20, r: 20, l: 50, b: 80 },
+    xaxis: {
+      title: 'Meal Type',
+      gridcolor: '#f1f5f9'
+    },
+    yaxis: {
+      title: 'Average Students',
+      gridcolor: '#f1f5f9'
+    },
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: 'Inter, sans-serif' }
+  };
+
   Plotly.newPlot('chart-mess-meal', [{
-      x: messMealData.labels,
-      y: messMealData.values,
-      type: 'bar',
-      marker: { color: '#2ecc71' }
-  }], {
-      margin: { t: 40, r: 20, l: 40, b: 80 },
-      xaxis: { title: 'Meal type' },
-      yaxis: { title: 'Avg students' }
-  }, {responsive: true});
+    x: messMealData.labels,
+    y: messMealData.values,
+    type: 'bar',
+    marker: {
+      color: '#10b981',
+      line: { color: '#059669', width: 1 }
+    }
+  }], messLayout, { responsive: true });
 
+  // Attendance Day Chart
   const attendanceDayData = {{ charts.attendance | safe }};
+  const attendanceLayout = {
+    margin: { t: 20, r: 20, l: 50, b: 80 },
+    xaxis: {
+      title: 'Day of Week',
+      gridcolor: '#f1f5f9'
+    },
+    yaxis: {
+      title: 'Attendance Rate (%)',
+      range: [0, 100],
+      gridcolor: '#f1f5f9'
+    },
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: 'Inter, sans-serif' }
+  };
+
   Plotly.newPlot('chart-attendance-day', [{
-      x: attendanceDayData.labels,
-      y: attendanceDayData.values,
-      type: 'bar',
-      marker: { color: '#9b59b6' }
-  }], {
-      margin: { t: 40, r: 20, l: 40, b: 80 },
-      xaxis: { title: 'Day of week' },
-      yaxis: { title: 'Attendance %', range: [0, 100] }
-  }, {responsive: true});
+    x: attendanceDayData.labels,
+    y: attendanceDayData.values,
+    type: 'bar',
+    marker: {
+      color: '#8b5cf6',
+      line: { color: '#7c3aed', width: 1 }
+    }
+  }], attendanceLayout, { responsive: true });
 
+  // Recommendations Pie Chart
   const recCategoryData = {{ charts.recommendations | safe }};
-  Plotly.newPlot('chart-recommendations', [{
-      labels: recCategoryData.labels,
-      values: recCategoryData.values,
-      type: 'pie',
-      marker: { colors: ['#e74c3c', '#e67e22', '#2ecc71', '#3498db', '#9b59b6'] }
-  }], {
-      margin: { t: 40, r: 20, l: 20, b: 20 }
-  }, {responsive: true});
+  const recLayout = {
+    margin: { t: 20, r: 20, l: 20, b: 20 },
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: 'Inter, sans-serif' },
+    showlegend: true,
+    legend: { orientation: 'h', y: -0.2 }
+  };
 
+  Plotly.newPlot('chart-recommendations', [{
+    labels: recCategoryData.labels,
+    values: recCategoryData.values,
+    type: 'pie',
+    marker: {
+      colors: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']
+    },
+    textinfo: 'label+percent',
+    textposition: 'inside'
+  }], recLayout, { responsive: true });
+
+  // Peak Hours Chart
   const peakHoursData = {{ charts.peak_hours | safe }};
+  const peakLayout = {
+    barmode: 'group',
+    margin: { t: 20, r: 20, l: 50, b: 60 },
+    xaxis: {
+      title: 'Hour of Day',
+      gridcolor: '#f1f5f9'
+    },
+    yaxis: {
+      title: 'Average Load',
+      gridcolor: '#f1f5f9'
+    },
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: 'Inter, sans-serif' },
+    legend: { orientation: 'h', y: 1.1, x: 0.5, xanchor: 'center' }
+  };
+
   Plotly.newPlot('chart-peak-hours', [
     {
       x: peakHoursData.labels,
       y: peakHoursData.electricity,
       type: 'bar',
-      name: 'Electricity',
-      marker: { color: '#e67e22' }
+      name: 'Electricity (kWh)',
+      marker: {
+        color: '#f59e0b',
+        line: { color: '#d97706', width: 1 }
+      }
     },
     {
       x: peakHoursData.labels,
       y: peakHoursData.wifi,
       type: 'bar',
-      name: 'WiFi',
-      marker: { color: '#3498db' }
+      name: 'WiFi Users',
+      marker: {
+        color: '#3b82f6',
+        line: { color: '#1e40af', width: 1 }
+      }
     }
-  ], {
-      barmode: 'group',
-      margin: { t: 40, r: 20, l: 40, b: 60 },
-      xaxis: { title: 'Hour of day' },
-      yaxis: { title: 'Average load' }
-  }, {responsive: true});
+  ], peakLayout, { responsive: true });
+});
 </script>
 {% endblock %}
