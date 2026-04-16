@@ -35,13 +35,129 @@ def load_dashboard_data():
         'peak_hours': load_csv('fact_peak_hours.csv'),
         'daily_trends': load_csv('fact_daily_trends.csv', parse_dates=['date']),
         'weekly_trends': load_csv('fact_weekly_trends.csv'),
-        'recommendations': load_csv('dim_recommendations.csv'),
+        'recommendations': enhance_recommendations(load_csv('dim_recommendations.csv')),
     }
     return data
 
 
+def enhance_recommendations(df):
+    """Enhance recommendations data with detailed fields for dashboard display"""
+    if df.empty:
+        return df
+
+    # Add missing columns with enhanced data
+    if 'subcategory' not in df.columns:
+        df['subcategory'] = df['category'].map({
+            'Mess Timing': 'Mess Optimization',
+            'Energy Saving': 'Building Automation',
+            'Class Scheduling': 'Academic Planning',
+            'Infrastructure / WiFi Capacity': 'Network Infrastructure',
+            'Resource Allocation': 'Facility Utilization'
+        }).fillna(df['category'])
+
+    if 'ease_of_implementation' not in df.columns:
+        df['ease_of_implementation'] = df.apply(lambda row: get_implementation_ease(row), axis=1)
+
+    if 'timeframe' not in df.columns:
+        df['timeframe'] = df['priority'].map({
+            'High': 'Immediate',
+            'Medium': '1-3 months',
+            'Low': 'Semester planning'
+        })
+
+    if 'problem_detected' not in df.columns:
+        df['problem_detected'] = df['category'].map({
+            'Mess Timing': 'Peak crowding at meal times',
+            'Energy Saving': 'Wasted electricity during off-hours',
+            'Class Scheduling': 'Suboptimal scheduling patterns',
+            'Infrastructure / WiFi Capacity': 'WiFi overload at peak locations',
+            'Resource Allocation': 'Underutilized facilities'
+        }).fillna('Operational inefficiency detected')
+
+    if 'data_insight' not in df.columns:
+        df['data_insight'] = df.apply(lambda row: extract_insight(row), axis=1)
+
+    if 'suggested_action' not in df.columns:
+        df['suggested_action'] = df.apply(lambda row: extract_action(row), axis=1)
+
+    if 'expected_impact' not in df.columns:
+        df['expected_impact'] = df['category'].map({
+            'Mess Timing': 'Reduce wait times and improve student satisfaction',
+            'Energy Saving': 'Save electricity costs and reduce carbon footprint',
+            'Class Scheduling': 'Better resource utilization and improved attendance',
+            'Infrastructure / WiFi Capacity': 'Improved connectivity and user experience',
+            'Resource Allocation': 'Optimized facility usage and cost savings'
+        }).fillna('Enhanced operational efficiency')
+
+    if 'icon' not in df.columns:
+        df['icon'] = df['category'].map({
+            'Mess Timing': 'fas fa-utensils',
+            'Energy Saving': 'fas fa-bolt',
+            'Class Scheduling': 'fas fa-calendar-alt',
+            'Infrastructure / WiFi Capacity': 'fas fa-wifi',
+            'Resource Allocation': 'fas fa-building'
+        }).fillna('fas fa-lightbulb')
+
+    if 'color' not in df.columns:
+        df['color'] = df['category'].map({
+            'Mess Timing': 'success',
+            'Energy Saving': 'warning',
+            'Class Scheduling': 'info',
+            'Infrastructure / WiFi Capacity': 'danger',
+            'Resource Allocation': 'secondary'
+        }).fillna('primary')
+
+    return df
+
+
+def get_implementation_ease(row):
+    """Determine implementation ease based on recommendation content"""
+    rec_text = str(row['recommendation']).lower()
+    if 'self-study' in rec_text or 'reallocate' in rec_text:
+        return 'Easy'
+    elif 'automated' in rec_text or 'add access points' in rec_text:
+        return 'Hard'
+    else:
+        return 'Medium'
+
+
+def extract_insight(row):
+    """Extract data insight from recommendation"""
+    rec = str(row['recommendation'])
+    if 'avg' in rec and 'vs' in rec:
+        # Extract numbers for mess timing
+        import re
+        numbers = re.findall(r'(\d+)', rec)
+        if len(numbers) >= 2:
+            return f"Average {numbers[0]} students during recommended time vs {numbers[1]} during peak"
+    elif 'units wasted' in rec:
+        return "Significant electricity waste during low-occupancy hours"
+    elif 'attendance' in rec:
+        return "Low attendance rates on certain days"
+    else:
+        return "Data analysis indicates optimization opportunity"
+
+
+def extract_action(row):
+    """Extract suggested action"""
+    rec = str(row['recommendation'])
+    if 'Visit' in rec:
+        return rec.split('—')[0].strip()
+    elif 'Schedule' in rec:
+        return "Adjust class scheduling patterns"
+    elif 'Implement' in rec:
+        return "Deploy automated energy management"
+    elif 'Add access' in rec:
+        return "Expand network infrastructure"
+    elif 'Consider' in rec:
+        return "Reallocate resources efficiently"
+    else:
+        return rec.split('—')[0].strip() if '—' in rec else rec
+
+
 def safe_json(payload):
-    return json.dumps(payload, default=str)
+    # Keep the payload as native Python objects so Jinja can serialize it properly.
+    return payload
 
 
 def prepare_context():

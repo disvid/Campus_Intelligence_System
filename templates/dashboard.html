@@ -193,72 +193,337 @@
 
 <!-- Recommendations Section -->
 <section class="recommendations-section mb-5" id="insights">
-  <div class="card shadow-soft">
-    <div class="card-header">
-      <h5 class="card-title mb-0">
-        <i class="fas fa-lightbulb me-2"></i>
-        AI-Generated Recommendations
-      </h5>
-      <small class="text-muted">Actionable insights to optimize campus operations and resource utilization</small>
+  <!-- Section Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-2">
+        <i class="fas fa-lightbulb text-warning me-3"></i>
+        AI-Powered Recommendations
+      </h2>
+      <p class="text-muted mb-0">Data-driven insights to optimize campus operations and resource utilization</p>
     </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary btn-sm" onclick="resetFilters()">
+        <i class="fas fa-undo me-2"></i>Reset Filters
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="exportRecommendations()">
+        <i class="fas fa-download me-2"></i>Export
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Controls -->
+  <div class="card shadow-soft mb-4">
     <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">
-                <i class="fas fa-tag me-2"></i>
-                Category
-              </th>
-              <th scope="col">
-                <i class="fas fa-flag me-2"></i>
-                Priority
-              </th>
-              <th scope="col">
-                <i class="fas fa-comment me-2"></i>
-                Recommendation
-              </th>
-              <th scope="col">
-                <i class="fas fa-dollar-sign me-2"></i>
-                Potential Impact
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in tables.recommendations %}
-            <tr>
-              <td>
-                <span class="badge bg-primary rounded-pill">{{ loop.index }}</span>
-              </td>
-              <td>
-                <span class="badge bg-secondary">{{ row.category }}</span>
-              </td>
-              <td>
-                {% if row.priority == 'High' %}
-                  <span class="priority-badge priority-high">
-                    <i class="fas fa-arrow-up me-1"></i>High
-                  </span>
-                {% elif row.priority == 'Medium' %}
-                  <span class="priority-badge priority-medium">
-                    <i class="fas fa-minus me-1"></i>Medium
-                  </span>
-                {% else %}
-                  <span class="priority-badge priority-low">
-                    <i class="fas fa-arrow-down me-1"></i>Low
-                  </span>
-                {% endif %}
-              </td>
-              <td class="text-wrap">{{ row.recommendation }}</td>
-              <td>
-                <strong class="text-success">{{ row.estimated_saving | default('N/A') }}</strong>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-search me-2"></i>Search Recommendations
+          </label>
+          <input type="text" class="form-control" id="searchInput" placeholder="Search by keyword..." onkeyup="filterRecommendations()">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-tags me-2"></i>Category
+          </label>
+          <select class="form-select" id="categoryFilter" onchange="filterRecommendations()">
+            <option value="">All Categories</option>
+            <option value="Energy Saving">Energy Saving</option>
+            <option value="Infrastructure / WiFi Capacity">Infrastructure / WiFi Capacity</option>
+            <option value="Mess Timing">Mess Timing</option>
+            <option value="Class Scheduling">Class Scheduling</option>
+            <option value="Resource Allocation">Resource Allocation</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-flag me-2"></i>Priority
+          </label>
+          <select class="form-select" id="priorityFilter" onchange="filterRecommendations()">
+            <option value="">All Priorities</option>
+            <option value="High">High Priority</option>
+            <option value="Medium">Medium Priority</option>
+            <option value="Low">Low Priority</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-sort me-2"></i>Sort By
+          </label>
+          <select class="form-select" id="sortFilter" onchange="filterRecommendations()">
+            <option value="priority">Priority</option>
+            <option value="impact">Impact</option>
+            <option value="ease">Ease of Implementation</option>
+            <option value="category">Category</option>
+          </select>
+        </div>
       </div>
     </div>
+  </div>
+
+  <!-- Recommendations Summary Stats -->
+  <div class="row g-3 mb-4" id="recommendationsSummary">
+    <div class="col-md-3">
+      <div class="card border-0 bg-danger bg-opacity-10">
+        <div class="card-body text-center">
+          <div class="display-6 fw-bold text-danger" id="highPriorityCount">0</div>
+          <div class="text-danger fw-semibold">High Priority</div>
+          <small class="text-muted">Requires immediate attention</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 bg-warning bg-opacity-10">
+        <div class="card-body text-center">
+          <div class="display-6 fw-bold text-warning" id="mediumPriorityCount">0</div>
+          <div class="text-warning fw-semibold">Medium Priority</div>
+          <small class="text-muted">Plan for implementation</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 bg-success bg-opacity-10">
+        <div class="card-body text-center">
+          <div class="display-6 fw-bold text-success" id="lowPriorityCount">0</div>
+          <div class="text-success fw-semibold">Low Priority</div>
+          <small class="text-muted">Consider when resources allow</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 bg-info bg-opacity-10">
+        <div class="card-body text-center">
+          <div class="display-6 fw-bold text-info" id="totalRecommendations">0</div>
+          <div class="text-info fw-semibold">Total Insights</div>
+          <small class="text-muted">Actionable recommendations</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommendations Grid -->
+  <div class="row g-4" id="recommendationsGrid">
+    {% for row in tables.recommendations %}
+    <div class="col-xl-6 col-lg-12 recommendation-card"
+         data-index="{{ loop.index0 }}"
+         data-category="{{ row.category }}"
+         data-priority="{{ row.priority }}"
+         data-search="{{ row.recommendation | lower }} {{ row.problem_detected | lower }} {{ row.suggested_action | lower }}">
+
+      <!-- Insight Card -->
+      <div class="card shadow-soft h-100 recommendation-item"
+           data-bs-toggle="modal"
+           data-bs-target="#recommendationModal{{ loop.index }}"
+           style="cursor: pointer; transition: all 0.3s ease;">
+
+        <!-- Card Header -->
+        <div class="card-header border-0 bg-gradient">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex align-items-center">
+              <div class="icon-circle me-3
+                {% if row.color == 'success' %}bg-success{% elif row.color == 'warning' %}bg-warning{% elif row.color == 'danger' %}bg-danger{% elif row.color == 'info' %}bg-info{% else %}bg-secondary{% endif %}">
+                <i class="{{ row.icon }} text-white"></i>
+              </div>
+              <div>
+                <h6 class="mb-1 fw-bold">{{ row.category }}</h6>
+                <small class="text-muted">{{ row.subcategory }}</small>
+              </div>
+            </div>
+            <div class="priority-badge-container">
+              {% if row.priority == 'High' %}
+                <span class="priority-badge priority-high">
+                  <i class="fas fa-arrow-up me-1"></i>High
+                </span>
+              {% elif row.priority == 'Medium' %}
+                <span class="priority-badge priority-medium">
+                  <i class="fas fa-minus me-1"></i>Medium
+                </span>
+              {% else %}
+                <span class="priority-badge priority-low">
+                  <i class="fas fa-arrow-down me-1"></i>Low
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          <!-- Problem Detected -->
+          <div class="mb-3">
+            <div class="d-flex align-items-center mb-2">
+              <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+              <span class="fw-semibold text-muted small">PROBLEM DETECTED</span>
+            </div>
+            <p class="mb-0 small">{{ row.problem_detected }}</p>
+          </div>
+
+          <!-- Key Insight -->
+          <div class="mb-3">
+            <div class="d-flex align-items-center mb-2">
+              <i class="fas fa-chart-line text-info me-2"></i>
+              <span class="fw-semibold text-muted small">DATA INSIGHT</span>
+            </div>
+            <p class="mb-0 small">{{ row.data_insight }}</p>
+          </div>
+
+          <!-- Suggested Action -->
+          <div class="mb-3">
+            <div class="d-flex align-items-center mb-2">
+              <i class="fas fa-lightbulb text-success me-2"></i>
+              <span class="fw-semibold text-muted small">SUGGESTED ACTION</span>
+            </div>
+            <p class="mb-2 fw-semibold">{{ row.suggested_action }}</p>
+          </div>
+
+          <!-- Expected Impact -->
+          <div class="mb-3">
+            <div class="d-flex align-items-center mb-2">
+              <i class="fas fa-trophy text-primary me-2"></i>
+              <span class="fw-semibold text-muted small">EXPECTED IMPACT</span>
+            </div>
+            <p class="mb-0 small">{{ row.expected_impact }}</p>
+          </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="card-footer border-0 bg-light">
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-tools text-muted me-2"></i>
+                <div>
+                  <div class="small fw-semibold">{{ row.ease_of_implementation }}</div>
+                  <div class="small text-muted">Implementation</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-clock text-muted me-2"></i>
+                <div>
+                  <div class="small fw-semibold">{{ row.timeframe }}</div>
+                  <div class="small text-muted">Timeframe</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-2 pt-2 border-top">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="badge bg-success fw-semibold">{{ row.estimated_saving }}</span>
+              <span class="text-muted small">Click for details →</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Detailed View -->
+    <div class="modal fade" id="recommendationModal{{ loop.index }}" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="{{ row.icon }} me-2 text-{{ row.color }}"></i>
+              {{ row.category }} Recommendation
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Priority Badge -->
+            <div class="mb-3">
+              {% if row.priority == 'High' %}
+                <span class="priority-badge priority-high">
+                  <i class="fas fa-arrow-up me-1"></i>High Priority
+                </span>
+              {% elif row.priority == 'Medium' %}
+                <span class="priority-badge priority-medium">
+                  <i class="fas fa-minus me-1"></i>Medium Priority
+                </span>
+              {% else %}
+                <span class="priority-badge priority-low">
+                  <i class="fas fa-arrow-down me-1"></i>Low Priority
+                </span>
+              {% endif %}
+              <span class="badge bg-secondary ms-2">{{ row.subcategory }}</span>
+            </div>
+
+            <!-- Detailed Information -->
+            <div class="row g-4">
+              <div class="col-md-8">
+                <h6 class="text-danger mb-2">
+                  <i class="fas fa-exclamation-triangle me-2"></i>Problem Detected
+                </h6>
+                <p class="mb-4">{{ row.problem_detected }}</p>
+
+                <h6 class="text-info mb-2">
+                  <i class="fas fa-chart-line me-2"></i>Data-Driven Insight
+                </h6>
+                <p class="mb-4">{{ row.data_insight }}</p>
+
+                <h6 class="text-success mb-2">
+                  <i class="fas fa-lightbulb me-2"></i>Recommended Action
+                </h6>
+                <p class="mb-4 fw-semibold">{{ row.suggested_action }}</p>
+
+                <h6 class="text-primary mb-2">
+                  <i class="fas fa-trophy me-2"></i>Expected Impact
+                </h6>
+                <p class="mb-0">{{ row.expected_impact }}</p>
+              </div>
+
+              <div class="col-md-4">
+                <!-- Implementation Details -->
+                <div class="card border">
+                  <div class="card-header bg-light">
+                    <h6 class="mb-0">Implementation Details</h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="mb-3">
+                      <div class="d-flex justify-content-between">
+                        <span class="text-muted">Difficulty:</span>
+                        <span class="fw-semibold">{{ row.ease_of_implementation }}</span>
+                      </div>
+                    </div>
+                    <div class="mb-3">
+                      <div class="d-flex justify-content-between">
+                        <span class="text-muted">Timeframe:</span>
+                        <span class="fw-semibold">{{ row.timeframe }}</span>
+                      </div>
+                    </div>
+                    <div class="mb-0">
+                      <div class="d-flex justify-content-between">
+                        <span class="text-muted">Potential Savings:</span>
+                        <span class="fw-semibold text-success">{{ row.estimated_saving }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="mt-3">
+                  <button class="btn btn-success w-100 mb-2" onclick="markAsImplemented({{ loop.index }})">
+                    <i class="fas fa-check me-2"></i>Mark as Implemented
+                  </button>
+                  <button class="btn btn-outline-primary w-100" onclick="scheduleAction({{ loop.index }})">
+                    <i class="fas fa-calendar-plus me-2"></i>Schedule Action
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- No Results Message -->
+  <div class="text-center py-5 d-none" id="noResults">
+    <i class="fas fa-search text-muted" style="font-size: 3rem;"></i>
+    <h5 class="text-muted mt-3">No recommendations found</h5>
+    <p class="text-muted">Try adjusting your filters or search terms</p>
+    <button class="btn btn-outline-primary" onclick="resetFilters()">Reset Filters</button>
   </div>
 </section>
 
@@ -278,184 +543,340 @@
   </div>
 </section>
 
-<!-- Chart Scripts -->
+<!-- Recommendations JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Electricity Consumption Chart
-  const electricityData = {{ charts.electricity | safe }};
-  const electricityLayout = {
-    margin: { t: 20, r: 20, l: 50, b: 50 },
-    xaxis: {
-      title: 'Date',
-      tickangle: -45,
-      gridcolor: '#f1f5f9'
-    },
-    yaxis: {
-      title: 'Total Units (kWh)',
-      gridcolor: '#f1f5f9'
-    },
-    paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { family: 'Inter, sans-serif' }
+  // Initialize recommendations
+  initializeRecommendations();
+
+  // Add smooth animations
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
   };
 
-  Plotly.newPlot('chart-electricity', [{
-    x: electricityData.x,
-    y: electricityData.y,
-    type: 'scatter',
-    mode: 'lines+markers',
-    marker: { color: '#f59e0b', size: 6 },
-    line: { color: '#f59e0b', width: 3, shape: 'spline', smoothing: 1.2 },
-    fill: 'tozeroy',
-    fillcolor: 'rgba(245, 158, 11, 0.1)'
-  }], electricityLayout, { responsive: true });
-
-  // WiFi Location Chart
-  const wifiLocationData = {{ charts.wifi_location | safe }};
-  const wifiLayout = {
-    margin: { t: 20, r: 20, l: 120, b: 50 },
-    xaxis: {
-      title: 'Total Users',
-      gridcolor: '#f1f5f9'
-    },
-    yaxis: {
-      automargin: true,
-      gridcolor: '#f1f5f9'
-    },
-    paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { family: 'Inter, sans-serif' }
-  };
-
-  Plotly.newPlot('chart-wifi-location', [{
-    x: wifiLocationData.values,
-    y: wifiLocationData.labels,
-    type: 'bar',
-    orientation: 'h',
-    marker: {
-      color: '#3b82f6',
-      line: { color: '#1e40af', width: 1 }
-    }
-  }], wifiLayout, { responsive: true });
-
-  // Mess Meal Chart
-  const messMealData = {{ charts.mess_meal | safe }};
-  const messLayout = {
-    margin: { t: 20, r: 20, l: 50, b: 80 },
-    xaxis: {
-      title: 'Meal Type',
-      gridcolor: '#f1f5f9'
-    },
-    yaxis: {
-      title: 'Average Students',
-      gridcolor: '#f1f5f9'
-    },
-    paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { family: 'Inter, sans-serif' }
-  };
-
-  Plotly.newPlot('chart-mess-meal', [{
-    x: messMealData.labels,
-    y: messMealData.values,
-    type: 'bar',
-    marker: {
-      color: '#10b981',
-      line: { color: '#059669', width: 1 }
-    }
-  }], messLayout, { responsive: true });
-
-  // Attendance Day Chart
-  const attendanceDayData = {{ charts.attendance | safe }};
-  const attendanceLayout = {
-    margin: { t: 20, r: 20, l: 50, b: 80 },
-    xaxis: {
-      title: 'Day of Week',
-      gridcolor: '#f1f5f9'
-    },
-    yaxis: {
-      title: 'Attendance Rate (%)',
-      range: [0, 100],
-      gridcolor: '#f1f5f9'
-    },
-    paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { family: 'Inter, sans-serif' }
-  };
-
-  Plotly.newPlot('chart-attendance-day', [{
-    x: attendanceDayData.labels,
-    y: attendanceDayData.values,
-    type: 'bar',
-    marker: {
-      color: '#8b5cf6',
-      line: { color: '#7c3aed', width: 1 }
-    }
-  }], attendanceLayout, { responsive: true });
-
-  // Recommendations Pie Chart
-  const recCategoryData = {{ charts.recommendations | safe }};
-  const recLayout = {
-    margin: { t: 20, r: 20, l: 20, b: 20 },
-    paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { family: 'Inter, sans-serif' },
-    showlegend: true,
-    legend: { orientation: 'h', y: -0.2 }
-  };
-
-  Plotly.newPlot('chart-recommendations', [{
-    labels: recCategoryData.labels,
-    values: recCategoryData.values,
-    type: 'pie',
-    marker: {
-      colors: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']
-    },
-    textinfo: 'label+percent',
-    textposition: 'inside'
-  }], recLayout, { responsive: true });
-
-  // Peak Hours Chart
-  const peakHoursData = {{ charts.peak_hours | safe }};
-  const peakLayout = {
-    barmode: 'group',
-    margin: { t: 20, r: 20, l: 50, b: 60 },
-    xaxis: {
-      title: 'Hour of Day',
-      gridcolor: '#f1f5f9'
-    },
-    yaxis: {
-      title: 'Average Load',
-      gridcolor: '#f1f5f9'
-    },
-    paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { family: 'Inter, sans-serif' },
-    legend: { orientation: 'h', y: 1.1, x: 0.5, xanchor: 'center' }
-  };
-
-  Plotly.newPlot('chart-peak-hours', [
-    {
-      x: peakHoursData.labels,
-      y: peakHoursData.electricity,
-      type: 'bar',
-      name: 'Electricity (kWh)',
-      marker: {
-        color: '#f59e0b',
-        line: { color: '#d97706', width: 1 }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('fade-in');
       }
-    },
-    {
-      x: peakHoursData.labels,
-      y: peakHoursData.wifi,
-      type: 'bar',
-      name: 'WiFi Users',
-      marker: {
-        color: '#3b82f6',
-        line: { color: '#1e40af', width: 1 }
-      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.recommendation-card').forEach(card => {
+    observer.observe(card);
+  });
+});
+
+function initializeRecommendations() {
+  updateRecommendationsSummary();
+  filterRecommendations();
+}
+
+function updateRecommendationsSummary() {
+  const recommendations = {{ tables.recommendations | tojson }};
+  const counts = {
+    high: recommendations.filter(r => r.priority === 'High').length,
+    medium: recommendations.filter(r => r.priority === 'Medium').length,
+    low: recommendations.filter(r => r.priority === 'Low').length,
+    total: recommendations.length
+  };
+
+  document.getElementById('highPriorityCount').textContent = counts.high;
+  document.getElementById('mediumPriorityCount').textContent = counts.medium;
+  document.getElementById('lowPriorityCount').textContent = counts.low;
+  document.getElementById('totalRecommendations').textContent = counts.total;
+}
+
+function filterRecommendations() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const categoryFilter = document.getElementById('categoryFilter').value;
+  const priorityFilter = document.getElementById('priorityFilter').value;
+  const sortBy = document.getElementById('sortFilter').value;
+
+  const cards = document.querySelectorAll('.recommendation-card');
+  let visibleCount = 0;
+
+  // Filter cards
+  cards.forEach(card => {
+    const category = card.dataset.category;
+    const priority = card.dataset.priority;
+    const searchText = card.dataset.search;
+
+    const matchesSearch = !searchTerm || searchText.includes(searchTerm);
+    const matchesCategory = !categoryFilter || category === categoryFilter;
+    const matchesPriority = !priorityFilter || priority === priorityFilter;
+
+    if (matchesSearch && matchesCategory && matchesPriority) {
+      card.style.display = 'block';
+      card.classList.add('slide-up');
+      visibleCount++;
+    } else {
+      card.style.display = 'none';
+      card.classList.remove('slide-up');
     }
-  ], peakLayout, { responsive: true });
+  });
+
+  // Show/hide no results message
+  const noResults = document.getElementById('noResults');
+  if (visibleCount === 0) {
+    noResults.classList.remove('d-none');
+  } else {
+    noResults.classList.add('d-none');
+  }
+
+  // Sort visible cards
+  sortRecommendations(sortBy);
+}
+
+function sortRecommendations(sortBy) {
+  const container = document.getElementById('recommendationsGrid');
+  const cards = Array.from(container.querySelectorAll('.recommendation-card[style*="display: block"]'));
+
+  cards.sort((a, b) => {
+    const aData = getRecommendationData(a);
+    const bData = getRecommendationData(b);
+
+    switch(sortBy) {
+      case 'priority':
+        const priorityOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
+        const aPriority = aData.priority || 'Medium';
+        const bPriority = bData.priority || 'Medium';
+        return priorityOrder[aPriority] - priorityOrder[bPriority];
+
+      case 'impact':
+        // Sort by estimated savings (simplified)
+        return bData.estimated_saving.localeCompare(aData.estimated_saving);
+
+      case 'ease':
+        const easeOrder = { 'Easy': 0, 'Medium': 1, 'Hard': 2 };
+        return easeOrder[aData.ease] - easeOrder[bData.ease];
+
+      case 'category':
+        return aData.category.localeCompare(bData.category);
+
+      default:
+        return 0;
+    }
+  });
+
+  // Reorder DOM elements
+  cards.forEach(card => container.appendChild(card));
+}
+
+function getRecommendationData(card) {
+  const recommendations = {{ tables.recommendations | tojson }};
+  const index = parseInt(card.dataset.index);
+  return recommendations[index];
+}
+
+function resetFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('categoryFilter').value = '';
+  document.getElementById('priorityFilter').value = '';
+  document.getElementById('sortFilter').value = 'priority';
+  filterRecommendations();
+}
+
+function exportRecommendations() {
+  // Simple export functionality
+  const visibleCards = document.querySelectorAll('.recommendation-card[style*="display: block"]');
+  let exportText = 'SMART CAMPUS RECOMMENDATIONS EXPORT\n';
+  exportText += '=' .repeat(50) + '\n\n';
+
+  visibleCards.forEach((card, index) => {
+    const data = getRecommendationData(card);
+    exportText += `${index + 1}. ${data.category}\n`;
+    exportText += `   Priority: ${data.priority}\n`;
+    exportText += `   Problem: ${data.problem_detected}\n`;
+    exportText += `   Action: ${data.suggested_action}\n`;
+    exportText += `   Impact: ${data.expected_impact}\n\n`;
+  });
+
+  const blob = new Blob([exportText], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'campus_recommendations.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function markAsImplemented(index) {
+  // Placeholder for implementation tracking
+  alert(`Recommendation ${index} marked as implemented! This feature would integrate with your task management system.`);
+}
+
+function scheduleAction(index) {
+  // Placeholder for scheduling functionality
+  alert(`Recommendation ${index} scheduled for implementation! This would open a calendar/task management interface.`);
+}
+
+// Chart Rendering Functions
+function renderCharts() {
+  // Electricity Consumption Trends
+  const electricityData = {{ charts.electricity | tojson }};
+  if (electricityData.x && electricityData.y) {
+    Plotly.newPlot('chart-electricity', [{
+      x: electricityData.x,
+      y: electricityData.y,
+      type: 'scatter',
+      mode: 'lines+markers',
+      name: electricityData.name,
+      line: {color: '#007bff', width: 3},
+      marker: {color: '#007bff', size: 6}
+    }], {
+      title: 'Electricity Consumption Trends',
+      xaxis: {title: 'Date'},
+      yaxis: {title: 'kWh Consumed'},
+      margin: {t: 40, l: 60, r: 30, b: 60},
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)'
+    });
+  }
+
+  // WiFi Load by Location
+  const wifiData = {{ charts.wifi_location | tojson }};
+  if (wifiData.labels && wifiData.values) {
+    Plotly.newPlot('chart-wifi-location', [{
+      labels: wifiData.labels,
+      values: wifiData.values,
+      type: 'pie',
+      marker: {
+        colors: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6c757d']
+      }
+    }], {
+      title: 'WiFi Usage by Location',
+      margin: {t: 40, l: 30, r: 30, b: 30},
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)'
+    });
+  }
+
+  // Mess Crowd Patterns
+  const messData = {{ charts.mess_meal | tojson }};
+  if (messData.labels && messData.values) {
+    Plotly.newPlot('chart-mess-meal', [{
+      x: messData.labels,
+      y: messData.values,
+      type: 'bar',
+      marker: {color: '#28a745'}
+    }], {
+      title: 'Average Students per Meal Type',
+      xaxis: {title: 'Meal Type'},
+      yaxis: {title: 'Average Students'},
+      margin: {t: 40, l: 60, r: 30, b: 60},
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)'
+    });
+  }
+
+  // Attendance Rate by Day
+  const attendanceData = {{ charts.attendance | tojson }};
+  if (attendanceData.labels && attendanceData.values) {
+    Plotly.newPlot('chart-attendance-day', [{
+      x: attendanceData.labels,
+      y: attendanceData.values,
+      type: 'bar',
+      marker: {color: '#17a2b8'}
+    }], {
+      title: 'Attendance Rate by Day of Week',
+      xaxis: {title: 'Day'},
+      yaxis: {title: 'Attendance Rate (%)'},
+      margin: {t: 40, l: 60, r: 30, b: 60},
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)'
+    });
+  }
+
+  // Recommendation Categories
+  const recData = {{ charts.recommendations | tojson }};
+  if (recData.labels && recData.values) {
+    Plotly.newPlot('chart-recommendations', [{
+      labels: recData.labels,
+      values: recData.values,
+      type: 'pie',
+      marker: {
+        colors: ['#ffc107', '#dc3545', '#28a745', '#17a2b8', '#6c757d']
+      }
+    }], {
+      title: 'Recommendations by Category',
+      margin: {t: 40, l: 30, r: 30, b: 30},
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)'
+    });
+  }
+
+  // Peak Hours Comparison
+  const peakData = {{ charts.peak_hours | tojson }};
+  if (peakData.labels && peakData.electricity && peakData.wifi) {
+    Plotly.newPlot('chart-peak-hours', [
+      {
+        x: peakData.labels,
+        y: peakData.electricity,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Electricity (units)',
+        line: {color: '#ffc107', width: 3},
+        marker: {color: '#ffc107', size: 6},
+        yaxis: 'y1'
+      },
+      {
+        x: peakData.labels,
+        y: peakData.wifi,
+        type: 'bar',
+        name: 'WiFi Users',
+        marker: {color: '#dc3545'},
+        yaxis: 'y2'
+      }
+    ], {
+      title: 'Peak Hours: Electricity vs WiFi Usage',
+      xaxis: {title: 'Hour of Day'},
+      yaxis: {title: 'Electricity (units)', side: 'left'},
+      yaxis2: {title: 'WiFi Users', side: 'right', overlaying: 'y'},
+      margin: {t: 40, l: 60, r: 60, b: 60},
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)',
+      legend: {x: 0, y: 1}
+    });
+  }
+}
+
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize recommendations
+  initializeRecommendations();
+
+  // Render charts
+  renderCharts();
+
+  // Add smooth animations
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('fade-in');
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.recommendation-card').forEach(card => {
+    observer.observe(card);
+  });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key === 'f') {
+    e.preventDefault();
+    document.getElementById('searchInput').focus();
+  }
 });
 </script>
 {% endblock %}

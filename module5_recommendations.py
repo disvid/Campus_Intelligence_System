@@ -175,7 +175,7 @@ def recommend_energy_saving(elec_df, wifi_df):
 
 
 # ════════════════════════════════════════════════════════════════════════════════
-# 3. CLASS SCHEDULING OPTIMIZATION
+# 3. CLASS SCHEDULING
 # ════════════════════════════════════════════════════════════════════════════════
 def recommend_class_scheduling(att_df, wifi_df):
     """
@@ -304,64 +304,140 @@ def recommend_wifi_capacity(wifi_df):
 # ════════════════════════════════════════════════════════════════════════════════
 # COMPILE ALL RECOMMENDATIONS
 # ════════════════════════════════════════════════════════════════════════════════
-def compile_recommendations(mess_rec, energy_sug, sched_rec, wifi_warn):
+def compile_recommendations(mess_rec, energy_sug, sched_rec, wifi_warn, att_df):
     print("\n[5] Compiling full recommendation report...")
 
     all_recs = []
 
-    # Mess
+    # Mess Timing → Crowd Management
     for _, r in mess_rec.iterrows():
         all_recs.append({
-            'category':       'Mess Timing',
-            'priority':       'Medium',
-            'recommendation': r['recommendation']
+            'category':           'Mess Timing',
+            'subcategory':        'Mess Optimization',
+            'priority':           'Medium',
+            'ease_of_implementation': 'Easy',
+            'timeframe':          'Immediate',
+            'estimated_saving':   "{:.0f}% crowd reduction".format(r['crowd_reduction_%']),
+            'problem_detected':   "Peak crowding at {} meals".format(r['meal_type']),
+            'data_insight':       "Average {:.0f} students during peak vs {:.0f} during recommended time".format(r['peak_crowd'], r['avg_crowd_then']),
+            'suggested_action':   "Visit {} at {:02d}:{:02d} on {}s".format(r['meal_type'], int(r['best_hour']), int(r['best_minute']), r['day_type']),
+            'expected_impact':    "Reduce wait times by {:.0f}% and improve student satisfaction".format(r['crowd_reduction_%']),
+            'recommendation':     r['recommendation'],
+            'icon':               'fas fa-users',
+            'color':              'success'
         })
 
-    # Energy
+    # Energy → Energy Saving
     for _, r in energy_sug.iterrows():
+        monthly_saving = r['monthly_saving_units'] * 8
         all_recs.append({
-            'category':       'Energy Saving',
-            'priority':       'High',
-            'recommendation': r['recommendation']
+            'category':           'Energy Saving',
+            'subcategory':        'Building Automation',
+            'priority':           'High',
+            'ease_of_implementation': 'Medium',
+            'timeframe':          '1-3 months',
+            'estimated_saving':   "₹{:.0f}/month".format(monthly_saving),
+            'problem_detected':   "Wasted electricity in {} during off-hours".format(r['building']),
+            'data_insight':       "Average {:.1f} units wasted daily during low-occupancy hours {}".format(r['avg_wasted_units_/d'], r['wasteful_hours']),
+            'suggested_action':   "Implement automated shutdown systems for {} during unoccupied hours".format(r['building']),
+            'expected_impact':    "Save {:.0f} units/month with smart building automation".format(r['monthly_saving_units']),
+            'recommendation':     r['recommendation'],
+            'icon':               'fas fa-bolt',
+            'color':              'warning'
         })
 
-    # Scheduling
+    # Scheduling → Class Scheduling
     for _, r in sched_rec.iterrows():
+        priority = 'High' if r['type'] == 'Optimal Day' else 'Low'
+        ease = 'Easy' if 'self-study' in r['recommendation'] else 'Medium'
+        timeframe = 'Immediate' if priority == 'High' else 'Semester planning'
+
+        attendance_pct = r.get('attendance_%', None)
         all_recs.append({
-            'category':       'Class Scheduling',
-            'priority':       'Low',
-            'recommendation': r['recommendation']
+            'category':           'Class Scheduling',
+            'subcategory':        'Academic Planning',
+            'priority':           priority,
+            'ease_of_implementation': ease,
+            'timeframe':          timeframe,
+            'estimated_saving':   'Improved attendance' if priority == 'High' else 'Resource optimization',
+            'problem_detected':   "Suboptimal scheduling on {}".format(r.get('day', 'various days')),
+            'data_insight':       "Attendance rate: {:.1f}%".format(attendance_pct) if attendance_pct is not None else "WiFi load analysis",
+            'suggested_action':   r['recommendation'].split('—')[0] if '—' in r['recommendation'] else r['recommendation'],
+            'expected_impact':    'Better resource utilization and student engagement',
+            'recommendation':     r['recommendation'],
+            'icon':               'fas fa-calendar-alt',
+            'color':              'info'
         })
 
-    # WiFi
+    # WiFi → Infrastructure / WiFi Capacity
     for _, r in wifi_warn.iterrows():
         all_recs.append({
-            'category':       'WiFi Capacity',
-            'priority':       'High',
-            'recommendation': r['action']
+            'category':           'Infrastructure / WiFi Capacity',
+            'subcategory':        'Network Infrastructure',
+            'priority':           'High',
+            'ease_of_implementation': 'Hard',
+            'timeframe':          '3-6 months',
+            'estimated_saving':   'Improved connectivity',
+            'problem_detected':   "WiFi overload at {}".format(r['location']),
+            'data_insight':       "Peak load: {:.1f}% capacity with {:.0f} concurrent users".format(r['load_%'], r['avg_users']),
+            'suggested_action':   "Add access points or implement load balancing at {} during peak hours".format(r['location']),
+            'expected_impact':    "Reduce connection issues and improve user experience for {:.0f} students".format(r['avg_users']),
+            'recommendation':     r['action'],
+            'icon':               'fas fa-wifi',
+            'color':              'danger'
         })
+
+    # Add some Resource Allocation recommendations based on attendance patterns
+    if not att_df.empty:
+        # Recreate att_by_day from att_df
+        att_by_day = att_df.groupby(att_df['date'].dt.day_name())['present'].agg(['sum', 'count']).reset_index()
+        att_by_day.columns = ['day_name', 'total_present', 'total_sessions']
+        att_by_day['att_rate'] = att_by_day['total_present'] / att_by_day['total_sessions']
+        att_by_day['att_rate_pct'] = att_by_day['att_rate'] * 100
+
+        low_attendance_days = att_by_day.nsmallest(2, 'att_rate')
+        for _, row in low_attendance_days.iterrows():
+            all_recs.append({
+                'category':           'Resource Allocation',
+                'subcategory':        'Facility Utilization',
+                'priority':           'Medium',
+                'ease_of_implementation': 'Easy',
+                'timeframe':          'Immediate',
+                'estimated_saving':   'Cost optimization',
+                'problem_detected':   "Underutilized facilities on {}".format(row['day_name']),
+                'data_insight':       "Only {:.1f}% average attendance on {}s".format(row['att_rate_pct'], row['day_name']),
+                'suggested_action':   "Reallocate {} classroom space for other academic activities or reduce operational costs".format(row['day_name']),
+                'expected_impact':    'Better facility utilization and potential cost savings',
+                'recommendation':     "Consider reallocating resources from low-attendance {}s to optimize facility usage".format(row['day_name']),
+                'icon':               'fas fa-building',
+                'color':              'secondary'
+            })
 
     final_df = pd.DataFrame(all_recs)
     final_df.to_csv('outputs/recommendations.csv', index=False)
 
-    # Human-readable text file
+    # Enhanced human-readable text file
     with open('outputs/recommendations.txt', 'w', encoding='utf-8') as f:
-        f.write("=" * 70 + "\n")
-        f.write("   SMART CAMPUS INTELLIGENCE — RECOMMENDATION REPORT\n")
-        f.write(f"   Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
-        f.write("=" * 70 + "\n\n")
+        f.write("=" * 80 + "\n")
+        f.write("        SMART CAMPUS INTELLIGENCE — RECOMMENDATION REPORT\n")
+        f.write("        Generated: {}\n".format(datetime.now().strftime('%Y-%m-%d %H:%M')))
+        f.write("=" * 80 + "\n\n")
 
-        for cat in ['Energy Saving', 'WiFi Capacity', 'Mess Timing',
-                    'Class Scheduling']:
-            subset = final_df[final_df['category'] == cat]
-            if subset.empty:
-                continue
-            f.write(f"── {cat} ──\n")
+        priority_order = {'High': 0, 'Medium': 1, 'Low': 2}
+        final_df['priority_order'] = final_df['priority'].map(priority_order)
+        sorted_df = final_df.sort_values(['priority_order', 'category'])
+
+        for cat in sorted_df['category'].unique():
+            subset = sorted_df[sorted_df['category'] == cat]
+            f.write("── {} ──\n".format(cat))
             for i, (_, row) in enumerate(subset.iterrows(), 1):
-                f.write(f"  [{row['priority']}] {i}. {row['recommendation']}\n")
-            f.write("\n")
+                f.write("  [{}] {}. {}\n".format(row['priority'], i, row['recommendation']))
+                f.write("     • Impact: {}\n".format(row['expected_impact']))
+                f.write("     • Implementation: {} ({})\n".format(row['ease_of_implementation'], row['timeframe']))
+                f.write("     • Savings: {}\n\n".format(row['estimated_saving']))
 
-    print(f"  Total recommendations: {len(final_df)}")
+    print("  Total recommendations: {}".format(len(final_df)))
+    print("  Total recommendations: {}".format(len(final_df)))
     print("  Saved → outputs/recommendations.csv")
     print("  Saved → outputs/recommendations.txt")
     return final_df
@@ -382,7 +458,7 @@ if __name__ == '__main__':
     sched_rec, att_by_day = recommend_class_scheduling(att_df, wifi_df)
     wifi_warn  = recommend_wifi_capacity(wifi_df)
     final_df   = compile_recommendations(mess_rec, energy_sug,
-                                          sched_rec, wifi_warn)
+                                          sched_rec, wifi_warn, att_df)
 
     print("\nSample from recommendations.txt:")
     print("─" * 55)

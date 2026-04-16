@@ -146,18 +146,169 @@ def prep_weekly_trends():
 
 # ── 7. dim_recommendations ───────────────────────────────────────────────────
 def prep_recommendations():
-    """Prepare dimension table for recommendations with priority ranking"""
+    """Prepare dimension table for recommendations with enhanced detailed fields"""
     df = pd.read_csv('outputs/recommendations.csv')
-    df = df.reset_index()
-    df = df.rename(columns={'index':'rec_id'})
-    df['rec_id'] = df['rec_id'] + 1
-    priority_map = {'High':1,'Medium':2,'Low':3}
-    df['priority_rank'] = df['priority'].map(priority_map)
-    # Extract saving amount if present in text
-    df['estimated_saving'] = df['recommendation'].str.extract(r'(₹[\d,]+)')
-    df['estimated_saving'] = df['estimated_saving'].fillna('—')
-    df.to_csv('outputs/dashboard/dim_recommendations.csv', index=False)
-    print(f"  ✓ dim_recommendations: {len(df)} rows")
+
+    # Create enhanced recommendations with detailed fields
+    enhanced_recs = []
+
+    for idx, row in df.iterrows():
+        rec = {
+            'rec_id': idx + 1,
+            'category': row['category'],
+            'subcategory': get_subcategory(row['category']),
+            'priority': row['priority'],
+            'priority_rank': {'High': 1, 'Medium': 2, 'Low': 3}[row['priority']],
+            'ease_of_implementation': get_implementation_ease(row),
+            'timeframe': get_timeframe(row['priority']),
+            'estimated_saving': extract_savings(row['recommendation']),
+            'problem_detected': extract_problem(row),
+            'data_insight': extract_insight(row),
+            'suggested_action': extract_action(row),
+            'expected_impact': extract_impact(row),
+            'recommendation': row['recommendation'],
+            'icon': get_category_icon(row['category']),
+            'color': get_category_color(row['category'])
+        }
+        enhanced_recs.append(rec)
+
+    enhanced_df = pd.DataFrame(enhanced_recs)
+    enhanced_df.to_csv('outputs/dashboard/dim_recommendations.csv', index=False)
+    print(f"  ✓ dim_recommendations: {len(enhanced_df)} rows with enhanced details")
+
+
+def get_subcategory(category):
+    """Map category to subcategory"""
+    mapping = {
+        'Mess Timing': 'Mess Optimization',
+        'Energy Saving': 'Building Automation',
+        'Class Scheduling': 'Academic Planning',
+        'Infrastructure / WiFi Capacity': 'Network Infrastructure',
+        'Resource Allocation': 'Facility Utilization'
+    }
+    return mapping.get(category, category)
+
+
+def get_implementation_ease(row):
+    """Determine implementation ease based on recommendation content"""
+    rec_text = row['recommendation'].lower()
+    if 'self-study' in rec_text or 'reallocate' in rec_text:
+        return 'Easy'
+    elif 'automated' in rec_text or 'add access points' in rec_text:
+        return 'Hard'
+    else:
+        return 'Medium'
+
+
+def get_timeframe(priority):
+    """Determine timeframe based on priority"""
+    if priority == 'High':
+        return 'Immediate'
+    elif priority == 'Medium':
+        return '1-3 months'
+    else:
+        return 'Semester planning'
+
+
+def extract_savings(recommendation):
+    """Extract savings amount from recommendation text"""
+    import re
+    match = re.search(r'₹([\d,]+)', recommendation)
+    if match:
+        return f"₹{match.group(1)}"
+    return 'Cost optimization'
+
+
+def extract_problem(row):
+    """Extract problem description based on category"""
+    category = row['category']
+    if 'Mess Timing' in category:
+        return "Peak crowding at meal times"
+    elif 'Energy Saving' in category:
+        return "Wasted electricity during off-hours"
+    elif 'Class Scheduling' in category:
+        return "Suboptimal scheduling patterns"
+    elif 'Infrastructure' in category:
+        return "WiFi overload at peak locations"
+    elif 'Resource Allocation' in category:
+        return "Underutilized facilities"
+    else:
+        return "Operational inefficiency detected"
+
+
+def extract_insight(row):
+    """Extract data insight from recommendation"""
+    rec = row['recommendation']
+    if 'avg' in rec and 'vs' in rec:
+        # Extract numbers for mess timing
+        import re
+        numbers = re.findall(r'(\d+)', rec)
+        if len(numbers) >= 2:
+            return f"Average {numbers[0]} students during recommended time vs {numbers[1]} during peak"
+    elif 'units wasted' in rec:
+        return "Significant electricity waste during low-occupancy hours"
+    elif 'attendance' in rec:
+        return "Low attendance rates on certain days"
+    else:
+        return "Data analysis indicates optimization opportunity"
+
+
+def extract_action(row):
+    """Extract suggested action"""
+    rec = row['recommendation']
+    if 'Visit' in rec:
+        return rec.split('—')[0].strip()
+    elif 'Schedule' in rec:
+        return "Adjust class scheduling patterns"
+    elif 'Implement' in rec:
+        return "Deploy automated energy management"
+    elif 'Add access' in rec:
+        return "Expand network infrastructure"
+    elif 'Consider' in rec:
+        return "Reallocate resources efficiently"
+    else:
+        return rec.split('—')[0].strip() if '—' in rec else rec
+
+
+def extract_impact(row):
+    """Extract expected impact"""
+    category = row['category']
+    if 'Mess Timing' in category:
+        return "Reduce wait times and improve student satisfaction"
+    elif 'Energy Saving' in category:
+        return "Save electricity costs and reduce carbon footprint"
+    elif 'Class Scheduling' in category:
+        return "Better resource utilization and improved attendance"
+    elif 'Infrastructure' in category:
+        return "Improved connectivity and user experience"
+    elif 'Resource Allocation' in category:
+        return "Optimized facility usage and cost savings"
+    else:
+        return "Enhanced operational efficiency"
+
+
+def get_category_icon(category):
+    """Get appropriate icon for category"""
+    mapping = {
+        'Mess Timing': 'fas fa-utensils',
+        'Energy Saving': 'fas fa-bolt',
+        'Class Scheduling': 'fas fa-calendar-alt',
+        'Infrastructure / WiFi Capacity': 'fas fa-wifi',
+        'Resource Allocation': 'fas fa-building'
+    }
+    return mapping.get(category, 'fas fa-lightbulb')
+
+
+def get_category_color(category):
+    """Get appropriate color for category"""
+    mapping = {
+        'Mess Timing': 'success',
+        'Energy Saving': 'warning',
+        'Class Scheduling': 'info',
+        'Infrastructure / WiFi Capacity': 'danger',
+        'Resource Allocation': 'secondary'
+    }
+    return mapping.get(category, 'primary')
 
 
 # ── 8. daily_trends (already output by module3, just copy + enhance) ─────────
