@@ -1,0 +1,28 @@
+category,priority,recommendation
+Mess Timing,Medium,Visit Breakfast at 07:00 on Weekdays — avg 106 students vs peak 367 (71% less crowded)
+Mess Timing,Medium,Visit Breakfast at 08:30 on Weekdays — avg 168 students vs peak 367 (54% less crowded)
+Mess Timing,Medium,Visit Breakfast at 07:00 on Weekends — avg 74 students vs peak 245 (70% less crowded)
+Mess Timing,Medium,Visit Breakfast at 08:30 on Weekends — avg 101 students vs peak 245 (59% less crowded)
+Mess Timing,Medium,Visit Lunch at 12:00 on Weekdays — avg 242 students vs peak 778 (69% less crowded)
+Mess Timing,Medium,Visit Lunch at 13:30 on Weekdays — avg 373 students vs peak 778 (52% less crowded)
+Mess Timing,Medium,Visit Lunch at 12:00 on Weekends — avg 149 students vs peak 532 (72% less crowded)
+Mess Timing,Medium,Visit Lunch at 13:30 on Weekends — avg 236 students vs peak 532 (56% less crowded)
+Mess Timing,Medium,Visit Snacks at 16:00 on Weekdays — avg 274 students vs peak 321 (15% less crowded)
+Mess Timing,Medium,Visit Snacks at 16:30 on Weekdays — avg 321 students vs peak 321 (0% less crowded)
+Mess Timing,Medium,Visit Snacks at 16:00 on Weekends — avg 177 students vs peak 214 (17% less crowded)
+Mess Timing,Medium,Visit Snacks at 16:30 on Weekends — avg 214 students vs peak 214 (0% less crowded)
+Mess Timing,Medium,Visit Dinner at 19:00 on Weekdays — avg 235 students vs peak 748 (69% less crowded)
+Mess Timing,Medium,Visit Dinner at 20:30 on Weekdays — avg 350 students vs peak 748 (53% less crowded)
+Mess Timing,Medium,Visit Dinner at 19:00 on Weekends — avg 153 students vs peak 517 (70% less crowded)
+Mess Timing,Medium,Visit Dinner at 20:30 on Weekends — avg 240 students vs peak 517 (54% less crowded)
+Energy Saving,High,"Hostel Block 1: High electricity during low-occupancy hours [0, 1, 2, 3, 4, 5, 23]. Estimated monthly saving with auto-shutdown: 2990.4 units (~₹23923 at ₹8/unit)."
+Energy Saving,High,"Hostel Block 2: High electricity during low-occupancy hours [0, 1, 2, 3, 4, 5, 23]. Estimated monthly saving with auto-shutdown: 2626.5 units (~₹21012 at ₹8/unit)."
+Class Scheduling,Low,Schedule critical exams / important lectures on Tuesday — avg attendance 79.61%.
+Class Scheduling,Low,Schedule critical exams / important lectures on Thursday — avg attendance 80.04%.
+Class Scheduling,Low,Schedule critical exams / important lectures on Friday — avg attendance 80.24%.
+Class Scheduling,Low,Consider converting Wednesday slots to self-study / tutorials — avg attendance only 78.92%.
+Class Scheduling,Low,Consider converting Saturday slots to self-study / tutorials — avg attendance only 53.89%.
+Class Scheduling,Low,Consider converting Sunday slots to self-study / tutorials — avg attendance only 53.65%.
+Class Scheduling,Low,Hour 02:00 has low WiFi load (avg 2 users) — ideal for bandwidth-heavy online classes or video lectures.
+Class Scheduling,Low,Hour 03:00 has low WiFi load (avg 3 users) — ideal for bandwidth-heavy online classes or video lectures.
+Class Scheduling,Low,Hour 04:00 has low WiFi load (avg 4 users) — ideal for bandwidth-heavy online classes or video lectures.
